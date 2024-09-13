@@ -14,7 +14,8 @@
     "notion-client": "^6.16.0",
     "react": "^18",
     "react-dom": "^18",
-    "react-notion-x": "^6.16.0"
+    "react-notion-x": "^6.16.0",
+    "zustand": "^4.5.5"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.7",

@@ -1,15 +1,17 @@
 import { Metadata } from 'next';
 import { getNotionPage } from '../lib/getNotion';
 import { NotionRenderer } from './component/Notion';
+import Statistics from './component/statistics';
 
 export default async function Resume() {
   const blocks = await getNotionPage();
   return (
-    <div className='py-10'>
-      <header className='notion notion-page'>
-      <h1 className="notion notion-title mt-5">송빈산 이력서</h1>
+    <div className="py-10">
+      <header className="notion notion-page">
+        <h1 className="notion notion-title mt-5">송빈산 이력서</h1>
       </header>
       <NotionRenderer recordMap={blocks} />
+      {/* <Statistics /> */}
     </div>
   );
 }
