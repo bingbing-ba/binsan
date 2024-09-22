@@ -11,7 +11,7 @@ export default async function Resume() {
         <h1 className="notion notion-title mt-5">송빈산 이력서</h1>
       </header>
       <NotionRenderer recordMap={blocks} />
-      {/* <Statistics /> */}
+      <Statistics />
     </div>
   );
 }

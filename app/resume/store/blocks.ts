@@ -4,69 +4,100 @@ import { devtools } from 'zustand/middleware';
 type BlockStore = {
   blocks: { id: string; text: string }[];
   setBlocks: (p: BlockStore['blocks']) => void;
-  readingTime: {
+  readingInfo: {
     [blockId: string]: {
       reading: boolean;
       readingStartedAt: number;
       totalTime: number;
     };
   };
-  setReadingTime: (p: { blockId: string; reading: boolean; time: number }) => void;
+  setReadingInfo: (p: { blockId: string; reading: boolean }) => void;
+  renewReadingInfo: () => void;
 };
 
 export const useBlockStore = create<BlockStore>()(
   devtools((set) => {
     return {
       blocks: [],
-      setBlocks: (p) => {
+      setBlocks(p) {
         set({ blocks: p });
       },
-      readingTime: {},
-      setReadingTime: ({ blockId, reading, time }) => {
+      readingInfo: {},
+      setReadingInfo({ blockId, reading }) {
         set((state) => {
-          const readingTime = state.readingTime[blockId];
+          const readingInfo = state.readingInfo[blockId];
+          const now = Date.now();
           if (reading) {
-            if (!readingTime) {
+            // entering firstTime
+            if (!readingInfo) {
               return {
-                readingTime: {
-                  ...state.readingTime,
+                readingInfo: {
+                  ...state.readingInfo,
                   [blockId]: {
                     reading: true,
-                    readingStartedAt: time,
+                    readingStartedAt: now,
                     totalTime: 0,
                   },
                 },
               };
             }
-            if (!readingTime.reading) {
+
+            // restart reading
+            if (!readingInfo.reading) {
               return {
-                readingTime: {
-                  ...state.readingTime,
+                readingInfo: {
+                  ...state.readingInfo,
                   [blockId]: {
                     reading: true,
-                    readingStartedAt: time,
-                    totalTime: readingTime.totalTime,
+                    readingStartedAt: now,
+                    totalTime: readingInfo.totalTime,
                   },
                 },
               };
             }
             return {};
           }
-          if (!readingTime) return {};
-          if (readingTime.reading) {
-            const totalTime = readingTime.totalTime + (time - readingTime.readingStartedAt);
+          if (!readingInfo) return {};
+
+          // end reading
+          if (readingInfo.reading) {
             return {
-              readingTime: {
-                ...state.readingTime,
+              readingInfo: {
+                ...state.readingInfo,
                 [blockId]: {
                   reading: false,
                   readingStartedAt: 0,
-                  totalTime,
+                  totalTime: readingInfo.totalTime,
                 },
               },
             };
           }
           return {};
+        });
+      },
+      renewReadingInfo() {
+        set((store) => {
+          const readingBlocks = Object.entries(store.readingInfo).filter(
+            ([blockId, readingTime]) => readingTime.reading
+          );
+          const now = Date.now();
+          const renewed = readingBlocks.reduce((acc, cur) => {
+            const [blockId, readingBlock] = cur;
+            const totalTime = now - readingBlock.readingStartedAt;
+            return {
+              ...acc,
+              [blockId]: {
+                ...readingBlock,
+                totalTime,
+              },
+            };
+          }, {} as BlockStore['readingInfo']);
+          return {
+            readingInfo: {
+              ...store.readingInfo,
+              ...renewed,
+            },
+          };
         });
       },
     };
